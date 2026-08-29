@@ -1,125 +1,42 @@
-# No-Brain EV Lab — Architecture & System Design
+# Architecture
 
-This document details the architectural boundaries, domain models, and service interfaces of **No-Brain EV Lab**.
+## Boundaries
 
----
-
-## 🏛️ System High-Level Topology
-
-```
-+-------------------------------------------------------------------------------+
-|                             No-Brain EV Lab (UI)                              |
-|   React 18 + TypeScript + Tailwind CSS + Recharts + Lucide Icons              |
-+-------------------------------------------------------------------------------+
-                                      │
-                                      ▼
-+-------------------------------------------------------------------------------+
-|                         API Abstraction Layer                                 |
-|                   `src/services/api/mockApi.ts`                               |
-|   (Provides `QuantApiService` Interface matching `src/types/index.ts`)        |
-+-------------------------------------------------------------------------------+
-            │                                             │
-            ▼ (Current MVP)                               ▼ (Future Codex Hook)
-+------------------------------------+      +-----------------------------------+
-|     In-Memory Mock / Simulator     |      |    External Python/FastAPI Server |
-|  - `backtest/engine.ts`            |      |  - VectorBT / Backtrader Engine   |
-|  - `prop/propSimulator.ts`         |      |  - ClickHouse / TimescaleDB       |
-|  - `calendar/sessionCalendar.ts`   |      |  - Live Execution Gateway         |
-+------------------------------------+      +-----------------------------------+
+```text
+React UI
+  ├─ mock mode ─────> mockApi + synthetic demo engines (labelled, isolated)
+  └─ research mode ─> researchApi HTTP adapter
+                              │
+FastAPI                       ▼
+  API -> validated dataset repository -> strategy signals -> backtest engine
+                                                        -> trade ledger
+                                                        -> metrics/results
 ```
 
----
+Research mode cannot call `mockApi`; the module has a mode guard in addition to the top-level UI split.
 
-## 📁 Directory Structure & Responsibilities
+## Domain separation
 
-```
-/src
-├── /components          # Reusable UI & Atomic Components
-│   ├── /Charts          # Recharts-based Quantitative Visualizers
-│   │   ├── EquityChart.tsx          # Equity curve with Train/Val/OOS shading
-│   │   ├── DrawdownChart.tsx        # Underwater drawdown chart
-│   │   ├── RollingEdgeChart.tsx     # Rolling 20/50/100 EV lines
-│   │   ├── EdgeDecayChart.tsx       # Healthy vs Decaying comparative chart
-│   │   ├── StabilityHeatmap.tsx     # Parameter stability plateau matrix
-│   │   └── PropMonteCarloChart.tsx  # Monte Carlo paths with profit/DD limits
-│   ├── DisclaimerBanner.tsx         # Prominent Mock / Demo data callouts
-│   ├── MetricCard.tsx               # Statistical KPI display card
-│   ├── ReportModal.tsx              # Printable Strategy Audit Report
-│   ├── StatusBadge.tsx              # Health, Market & Stage status badges
-│   ├── StrategyCard.tsx             # Interactive strategy catalog card
-│   ├── Sidebar.tsx                  # Left navigation bar with session clock
-│   └── Header.tsx                   # Top control header with timezone switch
-│
-├── /data                # Raw Strategy Definitions & Static Registries
-│   ├── strategies.ts    # Seed quantitative strategies with equity curves
-│   ├── datasets.ts      # Continuous futures & crypto dataset metadata
-│   └── propTemplates.ts # Preset rules for standard prop evaluations
-│
-├── /pages               # Route / View Page Modules
-│   ├── DashboardPage.tsx     # Overview KPI summary & tournament top ranks
-│   ├── StrategyLabPage.tsx   # Pipeline progression & search/filtering
-│   ├── StrategyDetailPage.tsx# In-depth breakdown (Rules, Performance, OOS)
-│   ├── BacktestsPage.tsx     # Dynamic parameter backtester & stability suite
-│   ├── TournamentPage.tsx    # 100-pt multi-factor scoring & comparison
-│   ├── EdgeHealthPage.tsx    # Rolling decay surveillance & elimination rules
-│   ├── PropSimulatorPage.tsx # Monte Carlo prop challenge evaluator
-│   ├── DataPage.tsx          # Dataset registry & CSV upload inspector
-│   └── SettingsPage.tsx      # System preferences & backend switcher
-│
-├── /services            # Core Business Logic & Domain Services
-│   ├── /api
-│   │   └── mockApi.ts        # Unified API interface bridging UI and engines
-│   ├── /backtest
-│   │   └── engine.ts         # Walk-forward backtest simulation engine
-│   ├── /prop
-│   │   └── propSimulator.ts  # Monte Carlo path evaluation engine
-│   └── /calendar
-│       └── sessionCalendar.ts# CME, COMEX, and UTC session clock normalizer
-│
-└── /types               # Global Domain TypeScript Types & Interfaces
-    └── index.ts         # Strategy, Backtest, Prop & Metric schemas
-```
+- `StrategyDefinition`: versioned hypothesis, deterministic rules, parameters, requirements, complexity, friction, status.
+- `BacktestRun`: strategy/dataset fingerprints, costs, sizing, timezone, chronological split periods, engine/Git versions and timestamp.
+- `BacktestResult`: immutable ledger-derived trades, metrics, equity/drawdown, rolling EV, yearly/directional/cost/OOS metrics.
 
----
+Performance is never stored on a definition.
 
-## 🧩 Strategy Schema Standardization
+## Backend modules
 
-Every strategy registered in the platform satisfies the strict `Strategy` interface in `src/types/index.ts`:
+- `app/data`: CSV loader, SHA-256 fingerprint, validation report, dataset repository.
+- `app/services/calendar.py`: IANA timezone and DST-aware session abstraction for NQ, GC, and 24/7 crypto.
+- `app/strategies`: base interface and versioned registry. NQ and GC have bar implementations; crypto has a deliberate portfolio-engine boundary.
+- `app/backtest`: next-bar execution, costs, sizing, ledger and metric derivation.
+- `app/api`: transport contracts. UI code is independent of Python implementation details.
 
-```typescript
-export interface Strategy {
-  id: string;                      // e.g. "NQ-FTM-001"
-  name: string;                    // e.g. "NQ Opening Momentum (09:35 ET)"
-  market: 'NQ' | 'GC' | 'CRYPTO';
-  status: StrategyStage;           // IDEA -> RESEARCH -> BACKTEST_PASS -> OOS_PASS -> PAPER -> LIVE -> DECAYING -> RETIRED
-  edgeHealth: EdgeHealthStatus;    // HEALTHY | WATCH | DECAYING | DISABLED
-  hypothesis: string;              // Economic reasoning
-  edgeExplanation: string;         // Why alpha persists
-  entryRules: string[];            // ≤ 3 mechanical conditions
-  exitRules: string[];             // Objective stop, target, and time exit
-  maxTradesPerDay: number;
-  dataRequirements: string[];
-  complexityScore: number;         // 1 to 10
-  executionFrictionScore: number;  // 1 to 10
-  parameters: Record<string, any>;
-  parameterSpecs: ParameterSpec[];
-  metrics: StrategyPerformanceMetrics;
-  equityCurve: EquityPoint[];
-  drawdownCurve: DrawdownPoint[];
-  rollingEdge: RollingEdgePoint[];
-  yearlyPerformance: YearlyPerformance[];
-  oosPartitions: OOSPartition[];
-}
-```
+The in-memory repositories are Phase 1 foundations, not durable production storage. Interfaces permit later Parquet/DuckDB/Polars implementations.
 
----
+## Execution invariant
 
-## 🛡️ Out-of-Sample (OOS) Gate Protocol
+Strategies calculate each signal only from rows at or before `signal_time`. The engine independently requires `entry timestamp > signal timestamp`. Golden and future-mutation tests enforce this boundary.
 
-To prevent curve-fitting and data snooping:
-- Data is strictly partitioned chronologically:
-  1. **TRAIN (45%)**: Initial parameter discovery.
-  2. **VALIDATION (20%)**: Hyperparameter tuning.
-  3. **OUT OF SAMPLE (20%)**: Blind quarantine test.
-  4. **FORWARD / LIVE (15%)**: Real-time paper/live performance tracking.
-- Random cross-validation splits are **strictly prohibited** for time-series financial data.
+## Futures and time
+
+Internal timestamps are UTC. ET logic uses `America/New_York`, never a fixed UTC offset. Dataset metadata distinguishes individual, continuous and back-adjusted continuous contracts and reserves roll/adjustment methods. Holiday/early-close calendars are an extension point and are not claimed complete.

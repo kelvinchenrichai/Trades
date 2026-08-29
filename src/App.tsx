@@ -17,8 +17,10 @@ import { EdgeHealthPage } from './pages/EdgeHealthPage';
 import { PropSimulatorPage } from './pages/PropSimulatorPage';
 import { DataPage } from './pages/DataPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { DATA_MODE } from './services/api/dataMode';
+import { ResearchApp } from './ResearchApp';
 
-export function App() {
+function DemoApp() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
@@ -219,6 +221,10 @@ export function App() {
       </div>
     </div>
   );
+}
+
+export function App() {
+  return DATA_MODE === 'research' ? <ResearchApp /> : <DemoApp />;
 }
 
 export default App;

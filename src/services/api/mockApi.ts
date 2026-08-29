@@ -11,6 +11,13 @@ import { INITIAL_DATASETS, SAMPLE_CSV_PREVIEW } from '../../data/datasets';
 import { Strategy, BacktestRunConfig, BacktestResult, PropFirmRule, PropSimulationResult, Dataset, CSVPreviewRow } from '../../types';
 import { BacktestEngine } from '../backtest/engine';
 import { PropSimulator } from '../prop/propSimulator';
+import { DATA_MODE } from './dataMode';
+
+function assertDemoMode(): void {
+  if (DATA_MODE !== 'mock') {
+    throw new Error('Mock API is disabled in RESEARCH mode; synthetic fallback is prohibited');
+  }
+}
 
 export interface StrategyFilters {
   market?: string;
@@ -26,6 +33,7 @@ export class QuantApiService {
    * Retrieve list of strategies with optional filtering & sorting
    */
   public static async getStrategies(filters?: StrategyFilters): Promise<Strategy[]> {
+    assertDemoMode();
     let result = [...ALL_STRATEGIES];
 
     if (filters) {
@@ -87,6 +95,7 @@ export class QuantApiService {
    * Retrieve strategy by ID
    */
   public static async getStrategyById(id: string): Promise<Strategy | null> {
+    assertDemoMode();
     const strategy = ALL_STRATEGIES.find((s) => s.id === id);
     return strategy || null;
   }
@@ -95,6 +104,7 @@ export class QuantApiService {
    * Execute Backtest simulation
    */
   public static async runBacktest(config: BacktestRunConfig): Promise<BacktestResult> {
+    assertDemoMode();
     const strategy = await this.getStrategyById(config.strategyId);
     if (!strategy) {
       throw new Error(`Strategy not found with ID ${config.strategyId}`);
@@ -106,6 +116,7 @@ export class QuantApiService {
    * Execute Prop Firm Monte Carlo Simulation
    */
   public static async runPropSimulation(strategyId: string, rules: PropFirmRule): Promise<PropSimulationResult> {
+    assertDemoMode();
     const strategy = await this.getStrategyById(strategyId);
     if (!strategy) {
       throw new Error(`Strategy not found with ID ${strategyId}`);
@@ -117,6 +128,7 @@ export class QuantApiService {
    * Get registered market datasets
    */
   public static async getDatasets(): Promise<Dataset[]> {
+    assertDemoMode();
     return [...INITIAL_DATASETS];
   }
 
@@ -124,6 +136,7 @@ export class QuantApiService {
    * Parse CSV content and validate schema
    */
   public static async parseAndPreviewCSV(csvContent: string): Promise<{ rows: CSVPreviewRow[]; totalCount: number; errors: string[] }> {
+    assertDemoMode();
     const lines = csvContent.trim().split('\n');
     if (lines.length < 2) {
       return { rows: SAMPLE_CSV_PREVIEW, totalCount: SAMPLE_CSV_PREVIEW.length, errors: [] };
