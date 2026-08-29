@@ -1,0 +1,6 @@
+{
+  "name": "No-Brain EV Lab",
+  "description": "Quantitative strategy research, backtesting, tournament, parameter stability, and edge health monitoring platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

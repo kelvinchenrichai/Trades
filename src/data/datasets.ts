@@ -1,0 +1,87 @@
+/**
+ * No-Brain EV Lab — Dataset Registry & Sample Data Specs
+ */
+
+import { Dataset, CSVPreviewRow } from '../types';
+
+export const INITIAL_DATASETS: Dataset[] = [
+  {
+    id: 'DS-NQ-1M-CONT',
+    symbol: 'NQ',
+    market: 'NQ',
+    contractType: 'BACK_ADJUSTED',
+    resolution: '1-Minute',
+    startDate: '2020-01-01',
+    endDate: '2026-08-28',
+    rows: 1845200,
+    missingDataPct: 0.02,
+    timezone: 'America/New_York',
+    status: 'VERIFIED',
+    fileSizeMb: 114.2,
+  },
+  {
+    id: 'DS-NQ-5M-CONT',
+    symbol: 'MNQ / NQ',
+    market: 'NQ',
+    contractType: 'CONTINUOUS',
+    resolution: '5-Minute',
+    startDate: '2020-01-01',
+    endDate: '2026-08-28',
+    rows: 369040,
+    missingDataPct: 0.01,
+    timezone: 'America/New_York',
+    status: 'VERIFIED',
+    fileSizeMb: 24.8,
+  },
+  {
+    id: 'DS-GC-5M-CONT',
+    symbol: 'GC / MGC',
+    market: 'GC',
+    contractType: 'BACK_ADJUSTED',
+    resolution: '5-Minute',
+    startDate: '2020-01-01',
+    endDate: '2026-08-28',
+    rows: 352100,
+    missingDataPct: 0.04,
+    timezone: 'America/New_York',
+    status: 'VERIFIED',
+    fileSizeMb: 22.1,
+  },
+  {
+    id: 'DS-CR-1H-PERP',
+    symbol: 'TOP30_PERP_UNIVERSE',
+    market: 'CRYPTO',
+    contractType: 'CONTINUOUS',
+    resolution: '1-Hour',
+    startDate: '2020-06-01',
+    endDate: '2026-08-28',
+    rows: 54200,
+    missingDataPct: 0.00,
+    timezone: 'UTC',
+    status: 'VERIFIED',
+    fileSizeMb: 8.4,
+  },
+  {
+    id: 'DS-NQ-TICK-SAMPLE',
+    symbol: 'NQZ25',
+    market: 'NQ',
+    contractType: 'INDIVIDUAL',
+    resolution: 'Tick / Level 1',
+    startDate: '2025-09-01',
+    endDate: '2025-12-15',
+    rows: 4210000,
+    missingDataPct: 0.00,
+    timezone: 'America/New_York',
+    status: 'MOCK',
+    fileSizeMb: 320.0,
+  },
+];
+
+export const SAMPLE_CSV_PREVIEW: CSVPreviewRow[] = [
+  { timestamp: '2026-08-28T09:30:00Z', open: 19842.25, high: 19855.50, low: 19838.00, close: 19852.75, volume: 4520, symbol: 'NQ', market: 'Futures', timezone: 'UTC' },
+  { timestamp: '2026-08-28T09:31:00Z', open: 19852.75, high: 19864.00, low: 19850.25, close: 19861.50, volume: 3890, symbol: 'NQ', market: 'Futures', timezone: 'UTC' },
+  { timestamp: '2026-08-28T09:32:00Z', open: 19861.50, high: 19870.25, low: 19858.00, close: 19868.00, volume: 4120, symbol: 'NQ', market: 'Futures', timezone: 'UTC' },
+  { timestamp: '2026-08-28T09:33:00Z', open: 19868.00, high: 19875.00, low: 19862.50, close: 19872.25, volume: 3670, symbol: 'NQ', market: 'Futures', timezone: 'UTC' },
+  { timestamp: '2026-08-28T09:34:00Z', open: 19872.25, high: 19882.50, low: 19870.00, close: 19880.00, volume: 4900, symbol: 'NQ', market: 'Futures', timezone: 'UTC' },
+  { timestamp: '2026-08-28T09:35:00Z', open: 19880.00, high: 19894.75, low: 19878.50, close: 19891.25, volume: 5210, symbol: 'NQ', market: 'Futures', timezone: 'UTC' },
+];
