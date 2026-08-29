@@ -23,9 +23,9 @@ export type StrategyStage =
   | 'DECAYING' 
   | 'RETIRED';
 
-export type EdgeHealthStatus = 'HEALTHY' | 'WATCH' | 'DECAYING' | 'DISABLED';
+export type EdgeHealthStatus = 'UNKNOWN' | 'HEALTHY' | 'WATCH' | 'DECAYING' | 'DISABLED';
 
-export type OOSVerdict = 'PASS' | 'WATCH' | 'FAIL';
+export type OOSVerdict = 'NOT_ELIGIBLE' | 'PASS' | 'WATCH' | 'FAIL';
 
 export type ContractType = 'INDIVIDUAL' | 'CONTINUOUS' | 'BACK_ADJUSTED';
 

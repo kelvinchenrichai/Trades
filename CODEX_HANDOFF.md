@@ -1,72 +1,32 @@
-# No-Brain EV Lab — Codex Handoff & Backend Transition Guide
+# Codex handoff
 
-> **Note for Codex / Secondary AI Agents**:
-> This document specifies how to connect real Python / Rust backtest engines, live market data feeds, and persistence databases without rewriting the React frontend.
+## Phase 1 state
 
----
+The frontend is preserved in demo mode and has a separate research-mode shell. The FastAPI backend is the research authority. Do not reconnect research screens to `src/data/strategies.ts` or `src/services/backtest/engine.ts`; both are demo-only.
 
-## 🎯 Current Implementation State
+Start backend from `backend/` and set:
 
-1. **Frontend**: Complete, fully styled with Tailwind CSS, responsive, and operational.
-2. **Data Layer**: 5 starter strategies pre-configured in `src/data/strategies.ts`.
-3. **API Bridge**: `src/services/api/mockApi.ts` exports `QuantApiService`.
-4. **UI Isolation**: None of the UI components directly touch raw files; all requests route through `QuantApiService`.
-
----
-
-## 🔌 Connecting a Real Python / FastAPI Backend
-
-To replace the mock statistical generator with a real backend:
-
-### Step 1: Implement the REST API Endpoints in FastAPI / Flask
-
-Create the following HTTP endpoints matching the JSON contracts in `src/types/index.ts`:
-
-- `GET /api/v1/strategies`
-  - Returns `Strategy[]`
-- `GET /api/v1/strategies/{id}`
-  - Returns `Strategy`
-- `POST /api/v1/backtest/run`
-  - Request body: `BacktestRunConfig`
-  - Response: `BacktestResult`
-- `POST /api/v1/prop/simulate`
-  - Request body: `{ strategyId, rules, riskPerTradeUSD, numSimulations }`
-  - Response: `PropSimulationResult`
-- `GET /api/v1/datasets`
-  - Returns `MarketDataset[]`
-
-### Step 2: Update `src/services/api/mockApi.ts`
-
-Modify `QuantApiService` to fetch from `backendUrl` (configured in Settings) when `useMockApi === false`:
-
-```typescript
-// Example replacement pattern for QuantApiService.getStrategies()
-async getStrategies(): Promise<Strategy[]> {
-  if (isLiveApiEnabled()) {
-    const res = await fetch(`${getBackendUrl()}/strategies`);
-    return await res.json();
-  }
-  return [...SEED_STRATEGIES];
-}
+```text
+VITE_DATA_MODE=research
+VITE_RESEARCH_API_URL=http://localhost:8000
 ```
 
----
+Upload a validated dataset with `POST /datasets/upload`, then submit its ID to `POST /backtests`. There is no fallback if either resource is absent.
 
-## 📈 Suggested Real-World Engine Stack
+## Invariants to preserve
 
-1. **Backtesting Kernel**:
-   - Python `VectorBT` / `VectorBT PRO` or `NautilusTrader` for ultra-fast event-driven and array-based backtesting.
-2. **Historical Data Storage**:
-   - `ClickHouse`, `DuckDB`, or `QuestDB` for millisecond-latency tick/1-minute OHLCV retrieval.
-3. **Continuous Futures Stitching**:
-   - Standard Volume-Roll or Open-Interest Roll with Pananama backward-ratio price adjustment to remove expiration gap artifacts.
-4. **Prop Firm Simulation**:
-   - Monte Carlo trade resampling using block-bootstrap (preserving autocorrelation and drawdown clustering) rather than pure i.i.d. shuffling.
+1. Definitions never contain performance.
+2. Results are derived from the trade ledger.
+3. Close-derived signals enter on a strictly later bar.
+4. UTC storage and IANA session zones are mandatory.
+5. Chronological splits only; 2026 defaults to forward-locked.
+6. Costs, versions and fingerprints stay in run provenance.
+7. `CR-RM-001` returns `501 NOT IMPLEMENTED` until a survivorship-safe multi-asset engine exists.
 
----
+## Known Phase 1 limits
 
-## ⚠️ Non-Negotiable Invariants
-
-1. **Zero Subjective Rules**: Do NOT introduce manual judgment parameters (e.g., "enter when price feels weak").
-2. **Keep the $\le 3$ Entry Conditions Limit**: Resist adding secondary indicators to improve in-sample Sharpe ratio at the cost of over-parameterization.
-3. **Plateau > Peak**: Keep the parameter neighborhood scanner active to reject isolated performance spikes.
+- Datasets and results are in memory and disappear on restart.
+- Exchange holiday, early-close, overnight-session, and continuous-roll execution rules are modelled but not fully implemented.
+- The engine supports a single position per signal and bar-based market orders; stops, targets and portfolio accounting are not implemented.
+- Research UI shows authoritative definitions and empty-state integrity; full upload/run/result workflow integration remains next work.
+- Prop Simulator and Tournament remain demo-only and cannot promote research strategies.

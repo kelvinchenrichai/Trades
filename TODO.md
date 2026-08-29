@@ -1,45 +1,31 @@
-# No-Brain EV Lab — Development Roadmap & TODO
+# Roadmap
 
-## ✅ Phase 1: MVP Core UI/UX & Quantitative Framework (Completed)
+## Phase 1 — real quant foundation
 
-- [x] Standardize Unified `Strategy` & `Backtest` schema (`src/types/index.ts`)
-- [x] Implement 5 reference strategies (NQ Fixed Time, Gold London-NY, Crypto Momentum, Decaying Overnight Bounce, Gold Reversion)
-- [x] Implement `QuantApiService` abstraction layer (`src/services/api/mockApi.ts`)
-- [x] Implement Walk-Forward simulation engine (`src/services/backtest/engine.ts`)
-- [x] Implement Monte Carlo Prop Firm Simulator (`src/services/prop/propSimulator.ts`)
-- [x] Implement Session & Timezone Normalizer (`src/services/calendar/sessionCalendar.ts`)
-- [x] Build Institutional Recharts Visualizers:
-  - [x] Partitioned Equity Curve (`Train`, `Val`, `OOS`, `Forward`)
-  - [x] Underwater Drawdown Chart
-  - [x] Multi-Window Rolling Edge Trajectory (20, 50, 100 Trades)
-  - [x] Edge Decay Comparative Health Chart
-  - [x] Parameter Stability Plateau Heatmap (Plateau > Peak)
-  - [x] Prop Evaluation Monte Carlo Path Visualizer
-- [x] Build All 9 Navigable Platform Pages:
-  - [x] Dashboard
-  - [x] Strategy Lab
-  - [x] Strategy Detail
-  - [x] Backtests Runner
-  - [x] Tournament Leaderboard (100-Point Scoring Model)
-  - [x] Edge Health Surveillance Center
-  - [x] Universal Prop Firm Simulator
-  - [x] Data Registry & CSV Ingestion Previewer
-  - [x] Settings & Codex Hook
-- [x] Build Printable Strategy Audit Report Generator Modal
-- [x] Create Full Architecture & Codex Handoff Documentation
+- [x] Separate StrategyDefinition, BacktestRun and BacktestResult
+- [x] Create FastAPI service and versioned strategy registry
+- [x] Add strict mock/research mode boundary and no-fallback empty state
+- [x] Set starter research status to RESEARCH / UNKNOWN / NOT ELIGIBLE
+- [x] Add unified UTC OHLCV CSV loader, validation and quality report
+- [x] Add dataset hash and futures contract/roll metadata
+- [x] Add DST-aware session abstraction
+- [x] Add deterministic next-bar engine, long/short, costs and sizing
+- [x] Add trade ledger, equity, drawdown, metrics, rolling EV and cost sensitivity
+- [x] Add configurable chronological split provenance and forward lock
+- [x] Integrate NQ and GC interfaces; define crypto portfolio interface
+- [x] Add golden, data, DST, look-ahead, engine and metric tests
+- [x] Update research and data documentation
 
----
+## Deliberately not Phase 1
 
-## 🔮 Phase 2: Codex Backend Integration & Real Data (Next Steps)
+- [ ] Durable Parquet/DuckDB dataset and result repository
+- [ ] Exchange holiday/early-close provider and full overnight session rules
+- [ ] Continuous futures roll construction and adjustment calculations
+- [ ] Stop/target/intrabar fill models
+- [ ] Survivorship-safe crypto universe and multi-asset portfolio accounting
+- [ ] Full research UI for upload, run configuration and provenance charts
+- [ ] Ledger-based Prop simulation and eligible OOS Tournament
+- [ ] Walk-forward orchestration and parameter-stability tooling (without peak selection)
+- [ ] Performance profiling and vectorized/parallel research
 
-- [ ] **Python / FastAPI Microservice**:
-  - [ ] Implement VectorBT / Backtrader execution engine.
-  - [ ] Implement Parquet / ClickHouse historical data repository.
-  - [ ] Implement automatic continuous futures roll contract stitcher.
-- [ ] **Data Pipeline**:
-  - [ ] Ingest Databento / Polygon.io 1-minute historical bars for NQ & GC.
-  - [ ] Ingest Binance / Bybit funding rate and orderbook data for Crypto.
-- [ ] **Live Execution Bridge**:
-  - [ ] Tradovate / Rithmic API integration for automated NQ/GC order dispatch.
-  - [ ] Telegram / Discord real-time execution signal webhooks.
-  - [ ] Automated daily Edge Health surveillance cron job.
+No broker, private API, automatic trading or strategy optimizer is planned until research integrity is independently verified.
